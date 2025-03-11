@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:17
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - /Users/ekksera/Desktop/onlineschool:/var/lib/postgresql/data
+      - ./onlineschool/init.sql:/docker-entrypoint-initdb.d/initdb.sql
+    ports:
+      - "5433:5432"
+
+
+## По умолчанию в этой конфигурации используется локальный драйвер docker по умолчанию,
+## Для пользовательских томов замените на конфигурацию драйвера тома.
+volumes:
+  data1-1:
+  data1-2:
+  data2-1:
+  data2-2:
+  data3-1:
+  data3-2:
+  data4-1:
+  data4-2:
+  postgresdb-data:
+    driver: local
