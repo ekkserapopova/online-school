@@ -5,7 +5,7 @@ import (
 	"log"
 	"onlineschool/internal/app/dsn"
 	"onlineschool/internal/app/handler"
-	repo "onlineschool/internal/app/repository"
+	repo "onlineschool/internal/app/repository/postgres"
 	"onlineschool/internal/redis"
 
 	"github.com/joho/godotenv"
