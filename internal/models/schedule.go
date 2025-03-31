@@ -1,8 +1,12 @@
 package models
 
+import "time"
+
 // что-то на сложном
 type Schedule struct {
-	ID        int      `gorm:"primaryKey" json:"id"`
-	StudentID int      `gorm:"unique;not null" json:"studentId"`
-	Courses   []Course `gorm:"many2many:schedule_courses;" json:"courses"`
+	ID        int       `gorm:"primaryKey" json:"id"`
+	StudentID int       `gorm:"unique;not null" json:"studentId"`
+	Courses   []Course  `gorm:"many2many:schedules_courses;" json:"courses"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }

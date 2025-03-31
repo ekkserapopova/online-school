@@ -23,8 +23,7 @@ func main() {
 	// Migrate the schema
 	err = db.AutoMigrate(
 		&models.User{},
-		&models.Teacher{},
-		&models.Student{},
+		&models.Language{},
 		&models.Course{},
 		&models.Lesson{},
 		&models.Payment{},
