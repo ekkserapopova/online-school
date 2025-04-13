@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -9,7 +10,7 @@ import (
 )
 
 // Секретный ключ для подписи токена (должен быть защищен)
-var secretKey = []byte("katyushka")
+var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 // Функция для генерации JWT
 func GenerateJWT(userID uint) (string, error) {

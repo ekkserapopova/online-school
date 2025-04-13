@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-// что-то на сложном
 type Schedule struct {
 	ID        int       `gorm:"primaryKey" json:"id"`
 	StudentID int       `gorm:"unique;not null" json:"studentId"`

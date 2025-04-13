@@ -34,6 +34,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		api.GET("/schedule", TokenAuth(), h.GetLessons)
 		api.GET("/lesson/:id", h.GetLesson)
 		api.GET("/courses", h.GetCourses)
+		api.GET("/courses/user", TokenAuth(), h.GetUsersCourses)
 		api.GET("/languages", h.GetLanguages)
 		api.GET("/course/:id", h.GetCourse)
 		// api.GET("/student/:id", h.GetStudent)
@@ -45,6 +46,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		api.GET("/user/:id", h.GetUserByID)
 		api.POST("/enroll/:courseID", TokenAuth(), h.EnrollStudent)
 		api.GET("/lessons/course/:courseID", h.GetLessonsByCourseID)
+		api.GET("/enrolled/course/:courseID", TokenAuth(), h.IsStudentEnrolledInCourse)
+
+		api.GET("/payment/course/:courseID", TokenAuth(), h.GetPayment)
+		api.POST("/payment/course/:courseID", TokenAuth(), h.AddPayment)
+		api.PUT("/payment/course/:courseID", TokenAuth(), h.UpdatePayment)
 	}
 
 	return r
