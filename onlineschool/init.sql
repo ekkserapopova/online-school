@@ -1,296 +1,645 @@
--- Таблица пользователей
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    surname VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    birth DATE,
-    photo VARCHAR(255),
-    email VARCHAR(255) NOT NULL UNIQUE,
-    phone VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    salt VARCHAR(255) NOT NULL,
-    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    overview TEXT,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
--- Таблица языков
-CREATE TABLE IF NOT EXISTS languages (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-
+INSERT INTO languages (name, created_at, updated_at) VALUES
+('JavaScript', NOW(), NOW()),
+('Python', NOW(), NOW()),
+('Java', NOW(), NOW()),
+('C++', NOW(), NOW()),
+('Go', NOW(), NOW()),
+('PHP', NOW(), NOW()),
+('Ruby', NOW(), NOW());
 
 -- Таблица курсов
-CREATE TABLE IF NOT EXISTS courses (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    difficulty INTEGER NOT NULL,
-    price INTEGER NOT NULL DEFAULT 0,
-    teacher_id INTEGER NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
-);
+INSERT INTO courses (name, description, difficulty, price, teacher_id, is_active, created_at, updated_at) VALUES
+('Основы программирования на Python', 'Курс для начинающих, охватывающий базовые концепции программирования на Python.', 1, 4900, 1, true, NOW(), NOW()),
+('Разработка веб-приложений на JavaScript', 'Изучите современные техники создания веб-приложений с использованием фреймворков.', 3, 7900, 1, true, NOW(), NOW()),
+('Основы Data Science', 'Погружение в мир анализа данных и машинного обучения на Python.', 2, 5900, 1, true, NOW(), NOW()),
+('Разработка мобильных приложений', 'Научитесь создавать приложения для iOS и Android с использованием React Native.', 3, 8900, 1, true, NOW(), NOW()),
+('Алгоритмы и структуры данных', 'Углубленное изучение алгоритмов и структур данных для оптимизации кода.', 4, 6900, 1, false, NOW(), NOW()),
+('Бэкенд-разработка на Go', 'Изучение серверной разработки на высокопроизводительном языке Go.', 3, 9900, 1, true, NOW(), NOW()),
+('Веб-разработка на PHP', 'Создание динамических веб-сайтов с использованием PHP и MySQL.', 2, 5500, 1, true, NOW(), NOW());
 
+INSERT INTO language_courses (language_id, course_id) VALUES
+(2, 1), -- Python для Основы программирования на Python
+(1, 2), -- JavaScript для Разработка веб-приложений на JavaScript
+(2, 3), -- Python для Основы Data Science
+(1, 4), -- JavaScript для Разработка мобильных приложений
+(2, 5), -- Python для Алгоритмы и структуры данных
+(3, 5), -- Java для Алгоритмы и структуры данных
+(4, 5), -- C++ для Алгоритмы и структуры данных
+(5, 6), -- Go для Бэкенд-разработка на Go
+(6, 7); -- PHP для Веб-разработка на PHP
 
--- Таблица для связи многие-ко-многим между языками и курсами
-CREATE TABLE IF NOT EXISTS language_courses (
-    language_id INTEGER NOT NULL,
-    course_id INTEGER NOT NULL,
-    PRIMARY KEY (language_id, course_id),
-    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- Таблица для связи многие-ко-многим между студентами и курсами
-CREATE TABLE IF NOT EXISTS students_courses (
-    student_id INTEGER NOT NULL,
-    course_id INTEGER NOT NULL,
-    PRIMARY KEY (student_id, course_id),
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- Таблица расписания
-CREATE TABLE IF NOT EXISTS schedules (
-    id SERIAL PRIMARY KEY,
-    student_id INTEGER NOT NULL UNIQUE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Таблица для связи многие-ко-многим между расписаниями и курсами
-CREATE TABLE IF NOT EXISTS schedules_courses (
-    schedule_id INTEGER NOT NULL,
-    course_id INTEGER NOT NULL,
-    PRIMARY KEY (schedule_id, course_id),
-    FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
-select * from students_courses
-
-
-
-delete from payments where id = 4;
-
-delete from schedules_courses
+-- Таблица модулей
+INSERT INTO modules (name, description, course_id, created_at, updated_at) VALUES
+('Введение в Python', 'Основы синтаксиса, переменные и типы данных', 1, NOW(), NOW()),
+('Управляющие конструкции', 'Условные операторы и циклы', 1, NOW(), NOW()),
+('Функции и модули', 'Создание и использование функций, работа с модулями', 1, NOW(), NOW()),
+('Основы JavaScript', 'Синтаксис, переменные, типы данных и операторы', 2, NOW(), NOW()),
+('DOM-манипуляции', 'Работа с Document Object Model', 2, NOW(), NOW()),
+('Асинхронное программирование', 'Промисы, async/await, работа с API', 2, NOW(), NOW()),
+('Введение в анализ данных', 'Основы работы с данными, библиотеки NumPy и Pandas', 3, NOW(), NOW()),
+('Визуализация данных', 'Создание графиков и диаграмм с помощью Matplotlib и Seaborn', 3, NOW(), NOW()),
+('Основы мобильной разработки', 'Принципы разработки мобильных приложений', 4, NOW(), NOW()),
+('React Native для начинающих', 'Компоненты, стили и навигация', 4, NOW(), NOW()),
+('Базовые алгоритмы', 'Алгоритмы сортировки и поиска', 5, NOW(), NOW()),
+('Структуры данных', 'Стеки, очереди, списки, деревья и графы', 5, NOW(), NOW()),
+('Введение в Go', 'Основы синтаксиса и концепций языка Go', 6, NOW(), NOW()),
+('Серверная разработка на Go', 'Создание REST API и работа с базами данных', 6, NOW(), NOW()),
+('Основы PHP', 'Синтаксис, переменные и управляющие конструкции', 7, NOW(), NOW()),
+('Работа с базами данных', 'Взаимодействие с MySQL через PHP', 7, NOW(), NOW());
 
 -- Таблица уроков
-CREATE TABLE IF NOT EXISTS lessons (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    start TIMESTAMP WITH TIME ZONE NOT NULL,
-    "end" TIMESTAMP WITH TIME ZONE NOT NULL,
-    course_id INTEGER NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- Таблица материалов
-CREATE TABLE IF NOT EXISTS materials (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    file VARCHAR(255),
-    lesson_id INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
-);
-
--- Таблица домашних заданий
-CREATE TABLE IF NOT EXISTS homeworks (
-    id SERIAL PRIMARY KEY,
-    deadline TIMESTAMP WITH TIME ZONE,
-    file VARCHAR(255),
-    result INTEGER,
-    comment TEXT,
-    implementation_status VARCHAR(50),
-    lesson_id INTEGER NOT NULL,
-    student_id INTEGER NOT NULL,
-    status BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Таблица тестов
-CREATE TABLE IF NOT EXISTS tests (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    lesson_id INTEGER,
-    course_id INTEGER NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE SET NULL,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- Таблица вопросов
-CREATE TABLE IF NOT EXISTS questions (
-    id SERIAL PRIMARY KEY,
-    text TEXT,
-    answer VARCHAR(255),
-    test_id INTEGER NOT NULL,
-    points INTEGER DEFAULT 1,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE
-);
-
--- Таблица ответов
-CREATE TABLE IF NOT EXISTS answers (
-    id SERIAL PRIMARY KEY,
-    question_id INTEGER NOT NULL,
-    student_id INTEGER NOT NULL,
-    student_answer TEXT,
-    result BOOLEAN,
-    points_earned INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Таблица отзывов
-CREATE TABLE IF NOT EXISTS reviews (
-    id SERIAL PRIMARY KEY,
-    text TEXT,
-    assessment INTEGER NOT NULL CHECK (assessment BETWEEN 1 AND 5),
-    student_id INTEGER NOT NULL,
-    course_id INTEGER NOT NULL,
-    is_published BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- Таблица платежей
-CREATE TABLE IF NOT EXISTS payments (
-    id SERIAL PRIMARY KEY,
-    amount INTEGER,
-    status VARCHAR(50) NOT NULL,
-    date TIMESTAMP WITH TIME ZONE,
-    student_id INTEGER NOT NULL,
-    course_id INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
+INSERT INTO lessons (name, description, start, "end", module_id, is_active, created_at, updated_at) VALUES
+('Установка Python и первая программа', 'Установка интерпретатора Python и создание первого скрипта', '2025-04-20 18:00:00', '2025-04-20 20:00:00', 1, true, NOW(), NOW()),
+('Переменные и типы данных', 'Изучение основных типов данных в Python', '2025-04-22 18:00:00', '2025-04-22 20:00:00', 1, true, NOW(), NOW()),
+('Операторы в Python', 'Арифметические, логические и другие операторы', '2025-04-24 18:00:00', '2025-04-24 20:00:00', 1, true, NOW(), NOW()),
+('Условные операторы if-else', 'Использование условных операторов для ветвления программы', '2025-04-26 18:00:00', '2025-04-26 20:00:00', 2, true, NOW(), NOW()),
+('Циклы for и while', 'Создание повторяющихся блоков кода', '2025-04-28 18:00:00', '2025-04-28 20:00:00', 2, true, NOW(), NOW()),
+('Функции в Python', 'Определение и вызов функций', '2025-04-30 18:00:00', '2025-04-30 20:00:00', 3, true, NOW(), NOW()),
+('Работа с модулями', 'Импорт и использование стандартных модулей', '2025-05-02 18:00:00', '2025-05-02 20:00:00', 3, false, NOW(), NOW()),
+('Введение в JavaScript', 'История языка и его особенности', '2025-04-21 19:00:00', '2025-04-21 21:00:00', 4, true, NOW(), NOW()),
+('Переменные и типы данных в JS', 'Изучение основных типов данных в JavaScript', '2025-04-23 19:00:00', '2025-04-23 21:00:00', 4, true, NOW(), NOW()),
+('Основы работы с DOM', 'Доступ к элементам HTML через JavaScript', '2025-04-25 19:00:00', '2025-04-25 21:00:00', 5, true, NOW(), NOW()),
+('События в JavaScript', 'Обработка пользовательских событий', '2025-04-27 19:00:00', '2025-04-27 21:00:00', 5, true, NOW(), NOW()),
+('Введение в NumPy', 'Основы работы с многомерными массивами', '2025-04-21 18:00:00', '2025-04-21 20:00:00', 7, true, NOW(), NOW()),
+('Основы работы с Pandas', 'Анализ данных с помощью DataFrame', '2025-04-23 18:00:00', '2025-04-23 20:00:00', 7, true, NOW(), NOW()),
+('Основы React Native', 'Знакомство с React Native и его компонентами', '2025-04-22 19:00:00', '2025-04-22 21:00:00', 10, true, NOW(), NOW());
 
 
-UPDATE users SET is_active = TRUE WHERE is_active IS NULL;
-UPDATE users SET is_admin = FALSE WHERE is_admin IS NULL;
-UPDATE courses SET is_active = TRUE WHERE is_active IS NULL;
-UPDATE lessons SET is_active = TRUE WHERE is_active IS NULL;
-UPDATE tests SET is_active = TRUE WHERE is_active IS NULL;
-UPDATE reviews SET is_published = FALSE WHERE is_published IS NULL;
-UPDATE homeworks SET status = TRUE WHERE status IS NULL;
+INSERT INTO tests (name, description, module_id, is_active, created_at, updated_at) VALUES
+('Тест по основам Python', 'Проверка знаний базового синтаксиса и типов данных', 1, true, NOW(), NOW()),
+('Тест по условным операторам', 'Проверка понимания ветвления в программах', 2, true, NOW(), NOW()),
+('Тест по циклам', 'Проверка знаний о циклах for и while', 2, true, NOW(), NOW()),
+('Тест по функциям', 'Проверка умения создавать и использовать функции', 3, false, NOW(), NOW()),
+('Тест по основам JavaScript', 'Проверка знаний базового синтаксиса JS', 4, true, NOW(), NOW()),
+('Тест по DOM', 'Проверка понимания работы с DOM', 5, true, NOW(), NOW()),
+('Тест по NumPy', 'Проверка знаний о библиотеке NumPy', 7, true, NOW(), NOW()),
+('Тест по Pandas', 'Проверка умения работать с DataFrame', 7, false, NOW(), NOW()),
+('Тест по React Native', 'Проверка базовых знаний о React Native', 10, true, NOW(), NOW()),
+('Тест по алгоритмам сортировки', 'Проверка знаний алгоритмов сортировки', 11, true, NOW(), NOW());
 
--- Триггер для автоматического обновления поля updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Таблица questions (вопросы)
+INSERT INTO questions (text, test_id, points, created_at, updated_at) VALUES
+('Какой тип данных используется для хранения целых чисел в Python?', 1, 1, NOW(), NOW()),
+('Какой оператор используется для конкатенации строк в Python?', 1, 1, NOW(), NOW()),
+('Какое ключевое слово используется для объявления условного оператора в Python?', 2, 1, NOW(), NOW()),
+('Какой цикл используется для выполнения блока кода заданное количество раз?', 3, 1, NOW(), NOW()),
+('Какое ключевое слово используется для объявления функции в Python?', 4, 1, NOW(), NOW()),
+('Какой тип данных не является примитивным в JavaScript?', 5, 1, NOW(), NOW()),
+('Какой метод используется для получения элемента по ID в JavaScript?', 6, 1, NOW(), NOW()),
+('Какая функция используется для создания массива заполненного нулями в NumPy?', 7, 1, NOW(), NOW()),
+('Какой метод используется для чтения CSV-файла в Pandas?', 8, 1, NOW(), NOW()),
+('Какой компонент используется для создания прокручиваемого списка в React Native?', 9, 1, NOW(), NOW()),
+('Какая временная сложность алгоритма быстрой сортировки в среднем случае?', 10, 2, NOW(), NOW());
 
-DO $$
-DECLARE
-    t text;
-BEGIN
-    FOR t IN 
-        SELECT table_name FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_type = 'BASE TABLE'
-        AND table_name IN ('users', 'languages', 'courses', 'lessons', 
-                          'materials', 'homeworks', 'tests', 'questions', 
-                          'answers', 'reviews', 'payments', 'schedules')
-    LOOP
-        EXECUTE format('
-            DROP TRIGGER IF EXISTS set_%I_updated_at ON %I;
-            CREATE TRIGGER set_%I_updated_at
-            BEFORE UPDATE ON %I
-            FOR EACH ROW
-            EXECUTE FUNCTION update_updated_at_column();
-        ', t, t, t, t);
-    END LOOP;
-END;
-$$;
+INSERT INTO answer_variants (number_id, text, is_right, question_id, test_id, created_at, updated_at) VALUES
+-- Варианты для вопроса "Как досрочно завершить цикл в Python?"
+(1, 'break', true, 22, 3, NOW(), NOW()),
+(2, 'exit', false, 22, 3, NOW(), NOW()),
+(3, 'stop', false, 22, 3, NOW(), NOW()),
+(4, 'return', false, 22, 3, NOW(), NOW()),
+
+-- Варианты для вопроса "Как пропустить текущую итерацию цикла и перейти к следующей?"
+(1, 'continue', true, 23, 3, NOW(), NOW()),
+(2, 'skip', false, 23, 3, NOW(), NOW()),
+(3, 'next', false, 23, 3, NOW(), NOW()),
+(4, 'pass', false, 23, 3, NOW(), NOW()),
+
+-- Варианты для вопроса "Как создать цикл, который выполнится ровно 10 раз?"
+(1, 'for i in range(10):', true, 24, 3, NOW(), NOW()),
+(2, 'for i in range(1, 10):', false, 24, 3, NOW(), NOW()),
+(3, 'for i in range(0, 10, 1):', true, 24, 3, NOW(), NOW()),
+(4, 'for i in range(1, 11):', true, 24, 3, NOW(), NOW()),
+
+-- Варианты для вопроса "Что делает функция enumerate() при использовании с циклом for?"
+(1, 'Возвращает пары (индекс, элемент)', true, 25, 3, NOW(), NOW()),
+(2, 'Подсчитывает количество элементов', false, 25, 3, NOW(), NOW()),
+(3, 'Сортирует элементы перед итерацией', false, 25, 3, NOW(), NOW()),
+(4, 'Позволяет итерироваться по элементам в обратном порядке', false, 25, 3, NOW(), NOW()),
+
+-- Варианты для вопроса "Какой метод цикла for используется для итерации одновременно по нескольким последовательностям?"
+(1, 'zip()', true, 26, 3, NOW(), NOW()),
+(2, 'join()', false, 26, 3, NOW(), NOW()),
+(3, 'combine()', false, 26, 3, NOW(), NOW()),
+(4, 'enumerate()', false, 26, 3, NOW(), NOW()),
+
+-- Варианты для вопроса "Что такое рекурсивная функция?"
+(1, 'Функция, которая вызывает сама себя', true, 27, 4, NOW(), NOW()),
+(2, 'Функция с переменным числом аргументов', false, 27, 4, NOW(), NOW()),
+(3, 'Функция, которая возвращает другую функцию', false, 27, 4, NOW(), NOW()),
+(4, 'Функция, которая не возвращает значение', false, 27, 4, NOW(), NOW()),
+
+-- Варианты для вопроса "Как определить функцию с переменным числом аргументов?"
+(1, 'Использовать *args и/или **kwargs', true, 28, 4, NOW(), NOW()),
+(2, 'Использовать параметры по умолчанию', false, 28, 4, NOW(), NOW()),
+(3, 'Создать список параметров', false, 28, 4, NOW(), NOW()),
+(4, 'Определить функцию с параметром args[]', false, 28, 4, NOW(), NOW()),
+
+-- Варианты для вопроса "Что означает *args в определении функции?"
+(1, 'Принимает произвольное количество позиционных аргументов', true, 29, 4, NOW(), NOW()),
+(2, 'Объявляет аргументы как обязательные', false, 29, 4, NOW(), NOW()),
+(3, 'Указывает, что аргументы должны быть итерируемыми', false, 29, 4, NOW(), NOW()),
+(4, 'Распаковывает список аргументов', false, 29, 4, NOW(), NOW()),
+
+-- Варианты для вопроса "Что такое лямбда-функция в Python?"
+(1, 'Анонимная функция', true, 30, 4, NOW(), NOW()),
+(2, 'Функция высшего порядка', false, 30, 4, NOW(), NOW()),
+(3, 'Функция с отложенным выполнением', false, 30, 4, NOW(), NOW()),
+(4, 'Встроенная функция для работы со списками', false, 30, 4, NOW(), NOW()),
+
+-- Варианты для вопроса "Какой тип данных возвращает функция по умолчанию, если нет оператора return?"
+(1, 'None', true, 31, 4, NOW(), NOW()),
+(2, 'null', false, 31, 4, NOW(), NOW()),
+(3, 'False', false, 31, 4, NOW(), NOW()),
+(4, '0', false, 31, 4, NOW(), NOW());
 
 
+-- Вопросы для тестов
+INSERT INTO questions (text, test_id, points, created_at, updated_at) VALUES
+-- Тест по основам Python (test_id = 1)
+('Какой тип данных используется для хранения целых чисел в Python?', 1, 1, NOW(), NOW()),
+('Какой оператор используется для конкатенации строк в Python?', 1, 1, NOW(), NOW()),
+('Как объявить список в Python?', 1, 1, NOW(), NOW()),
+('Что выведет код: print(10 // 3)?', 1, 1, NOW(), NOW()),
+('Как проверить тип переменной x в Python?', 1, 1, NOW(), NOW()),
+('Какой метод строки преобразует все символы в верхний регистр?', 1, 1, NOW(), NOW()),
+('Как объявить словарь в Python?', 1, 1, NOW(), NOW()),
+('Какой метод используется для добавления элемента в конец списка?', 1, 1, NOW(), NOW()),
+('Какой оператор используется для возведения числа в степень?', 1, 1, NOW(), NOW()),
+('Что означает строка shebang (#!) в начале Python-скрипта?', 1, 1, NOW(), NOW()),
 
-insert into languages (name) VALUES 
-('Python'),
-('JavaScript'),
-('Java'),
-('C++'),
-('Go'),
-('PHP'),
-('Ruby'),
-('Swift'),
-('Kotlin'),
-('Dart');
+-- Тест по условным операторам (test_id = 2)
+('Какое ключевое слово используется для объявления условного оператора в Python?', 2, 1, NOW(), NOW()),
+('Что выведет код: print("да" if 10 > 5 else "нет")?', 2, 1, NOW(), NOW()),
+('Какое выражение эквивалентно: not (a or b)?', 2, 1, NOW(), NOW()),
+('Какой оператор используется для проверки наличия значения в последовательности?', 2, 1, NOW(), NOW()),
+('Как написать условие, проверяющее, что число находится в диапазоне от 10 до 20 включительно?', 2, 2, NOW(), NOW()),
+('Какое значение считается False в условных выражениях?', 2, 1, NOW(), NOW()),
+('Что выведет код: print(1 == "1")?', 2, 1, NOW(), NOW()),
+('Какой оператор используется для проверки идентичности объектов?', 2, 1, NOW(), NOW()),
+('Как написать конструкцию "если-иначе" в одну строку?', 2, 1, NOW(), NOW()),
+('Как проверить, что переменная равна одному из нескольких значений?', 2, 1, NOW(), NOW()),
 
-INSERT INTO courses (name, description, difficulty, price, teacher_id, is_active) VALUES 
-('Основы Python для начинающих', 'Полный курс с нуля для тех, кто хочет освоить самый популярный язык программирования. Изучите синтаксис, структуры данных, работу с файлами и основы ООП.', 1, 1000, 1, true),
-('JavaScript и React для веб-разработчиков', 'Интенсивный курс по созданию современных веб-приложений на React. От основ JavaScript до продвинутых паттернов React и управления состоянием.', 3, 0, 1, true),
-('Алгоритмы и структуры данных на Go', 'Погрузитесь в мир эффективных алгоритмов и структур данных с использованием Go. Курс для тех, кто хочет писать оптимальный код и пройти технические собеседования.', 4, 1000, 1, true),
-('Разработка мобильных приложений на Flutter', 'Научитесь создавать кроссплатформенные мобильные приложения на Flutter и Dart. От основ до публикации в App Store и Google Play.', 3, 1000, 1, true),
-('DevOps и CI/CD с Docker и Kubernetes', 'Полное руководство по автоматизации процессов разработки, тестирования и развертывания. Освойте Docker, Kubernetes, GitHub Actions и другие современные инструменты.', 5, 10, 1, true);
+-- Тест по циклам (test_id = 3)
+('Какой цикл используется для выполнения блока кода заданное количество раз?', 3, 1, NOW(), NOW()),
+('Как досрочно завершить цикл в Python?', 3, 1, NOW(), NOW()),
+('Как пропустить текущую итерацию цикла и перейти к следующей?', 3, 1, NOW(), NOW()),
+('Как создать цикл, который выполнится ровно 10 раз?', 3, 1, NOW(), NOW()),
+('Что делает функция enumerate() при использовании с циклом for?', 3, 2, NOW(), NOW()),
+('Какой метод цикла for используется для итерации одновременно по нескольким последовательностям?', 3, 2, NOW(), NOW()),
+('Как создать бесконечный цикл в Python?', 3, 1, NOW(), NOW()),
+('Что выведет код: for i in range(1, 6, 2): print(i)?', 3, 1, NOW(), NOW()),
+('Какой цикл гарантированно выполнится хотя бы один раз?', 3, 1, NOW(), NOW()),
+('Как итерироваться по ключам и значениям словаря одновременно?', 3, 2, NOW(), NOW()),
 
+-- Тест по функциям (test_id = 4)
+('Какое ключевое слово используется для объявления функции в Python?', 4, 1, NOW(), NOW()),
+('Что такое рекурсивная функция?', 4, 1, NOW(), NOW()),
+('Как определить функцию с переменным числом аргументов?', 4, 2, NOW(), NOW()),
+('Что означает *args в определении функции?', 4, 1, NOW(), NOW()),
+('Что такое лямбда-функция в Python?', 4, 1, NOW(), NOW()),
+('Какой тип данных возвращает функция по умолчанию, если нет оператора return?', 4, 1, NOW(), NOW()),
+('Что такое замыкание в Python?', 4, 2, NOW(), NOW()),
+('Как передать аргумент в функцию по имени?', 4, 1, NOW(), NOW()),
+('Что означает **kwargs в определении функции?', 4, 1, NOW(), NOW()),
+('Что такое декоратор в Python?', 4, 2, NOW(), NOW()),
 
+-- Тест по основам JavaScript (test_id = 5)
+('Какой тип данных не является примитивным в JavaScript?', 5, 1, NOW(), NOW()),
+('Как объявить переменную в JavaScript?', 5, 1, NOW(), NOW()),
+('Какой оператор используется для строгого сравнения в JavaScript?', 5, 1, NOW(), NOW()),
+('Как проверить, является ли переменная объектом определенного типа?', 5, 1, NOW(), NOW()),
+('Что такое hoisting в JavaScript?', 5, 2, NOW(), NOW()),
+('Какие есть способы объявления функции в JavaScript?', 5, 2, NOW(), NOW()),
+('Как создать объект в JavaScript?', 5, 1, NOW(), NOW()),
+('Что такое замыкание в JavaScript?', 5, 2, NOW(), NOW()),
+('Что выведет код: console.log(typeof null)?', 5, 1, NOW(), NOW()),
+('Что такое прототипное наследование?', 5, 2, NOW(), NOW()),
 
-select * from payments  where student_id = 4
-update courses set price = 1000 where id = 2;
-update courses set price = 1000 where id = 3;
-update courses set price = 1000 where id = 4;
-update courses set price = 1000 where id = 5;
+-- Тест по DOM (test_id = 6)
+('Какой метод используется для получения элемента по ID в JavaScript?', 6, 1, NOW(), NOW()),
+('Какой метод используется для добавления класса к элементу?', 6, 1, NOW(), NOW()),
+('Как создать новый элемент DOM?', 6, 1, NOW(), NOW()),
+('Какой метод используется для добавления элемента в конец родительского элемента?', 6, 1, NOW(), NOW()),
+('Как получить все элементы с определенным классом?', 6, 1, NOW(), NOW()),
+('Какое свойство элемента используется для изменения его HTML-содержимого?', 6, 1, NOW(), NOW()),
+('Как удалить элемент из DOM?', 6, 1, NOW(), NOW()),
+('Как добавить обработчик события к элементу?', 6, 1, NOW(), NOW()),
+('Какой метод используется для выбора элементов с помощью CSS-селекторов?', 6, 1, NOW(), NOW()),
+('Как получить значение атрибута элемента?', 6, 1, NOW(), NOW()),
 
--- Уроки для курса "Основы Python для начинающих" (id=1)
-INSERT INTO lessons (name, description, start, "end", course_id, is_active) VALUES
-('Введение в Python и установка окружения', 'Знакомство с Python, его философией и областями применения. Установка Python и настройка среды разработки.', '2025-03-28 10:00:00+00', '2025-03-28 12:00:00+00', 1, true),
-('Переменные, типы данных и операторы', 'Изучение основных типов данных в Python, объявление переменных, операции с различными типами данных.', '2025-04-02 10:00:00+00', '2025-04-02 12:00:00+00', 1, true),
-('Условные операторы и циклы', 'Управление потоком выполнения программы с помощью условных операторов и циклов. Практические примеры использования.', '2025-04-05 10:00:00+00', '2025-04-05 12:00:00+00', 1, true);
+-- Тест по NumPy (test_id = 7)
+('Какая функция используется для создания массива заполненного нулями в NumPy?', 7, 1, NOW(), NOW()),
+('Какой метод используется для транспонирования матрицы в NumPy?', 7, 1, NOW(), NOW()),
+('Как создать массив случайных чисел в NumPy?', 7, 1, NOW(), NOW()),
+('Какая функция используется для вычисления среднего значения элементов массива?', 7, 1, NOW(), NOW()),
+('Как объединить два массива NumPy по горизонтали?', 7, 2, NOW(), NOW()),
+('Какое преимущество имеют массивы NumPy перед обычными списками Python?', 7, 1, NOW(), NOW()),
+('Какая функция используется для поэлементного умножения двух массивов?', 7, 1, NOW(), NOW()),
+('Как создать единичную матрицу в NumPy?', 7, 1, NOW(), NOW()),
+('Как найти индексы максимальных значений в массиве?', 7, 1, NOW(), NOW()),
+('Как изменить форму массива без изменения его данных?', 7, 1, NOW(), NOW()),
 
--- Уроки для курса "JavaScript и React для веб-разработчиков" (id=2)
-INSERT INTO lessons (name, description, start, "end", course_id, is_active) VALUES
-('Основы JavaScript и DOM', 'Изучение основ JavaScript, работа с DOM-деревом, манипуляции с элементами страницы.', '2025-03-27 15:00:00+00', '2025-03-27 17:30:00+00', 2, true),
-('Введение в React и компонентный подход', 'Знакомство с библиотекой React, создание и настройка проекта, компонентная архитектура.', '2025-04-01 15:00:00+00', '2025-04-01 17:30:00+00', 2, true),
-('Хуки React и управление состоянием', 'Использование хуков useState, useEffect, useContext и других для управления состоянием компонентов.', '2025-04-04 15:00:00+00', '2025-04-04 17:30:00+00', 2, true);
+-- Тест по Pandas (test_id = 8)
+('Какой метод используется для чтения CSV-файла в Pandas?', 8, 1, NOW(), NOW()),
+('Как загрузить CSV-файл в DataFrame с пропуском первых 5 строк?', 8, 2, NOW(), NOW()),
+('Какая функция используется для удаления строк с пропущенными значениями?', 8, 1, NOW(), NOW()),
+('Как выбрать все строки DataFrame, где значение в столбце "Age" больше 30?', 8, 1, NOW(), NOW()),
+('Какая функция используется для группировки данных по значению определенного столбца?', 8, 1, NOW(), NOW()),
+('Как объединить два DataFrame по общему столбцу?', 8, 2, NOW(), NOW()),
+('Как создать сводную таблицу в Pandas?', 8, 2, NOW(), NOW()),
+('Какой метод используется для сортировки DataFrame по значениям столбца?', 8, 1, NOW(), NOW()),
+('Как заменить пропущенные значения в DataFrame?', 8, 1, NOW(), NOW()),
+('Как применить пользовательскую функцию к каждой строке или столбцу DataFrame?', 8, 2, NOW(), NOW()),
 
--- Уроки для курса "Алгоритмы и структуры данных на Go" (id=3)
-INSERT INTO lessons (name, description, start, "end", course_id, is_active) VALUES
-('Введение в Go и его особенности', 'Знакомство с языком Go, его синтаксисом, типами данных и системой пакетов.', '2025-03-26 18:00:00+00', '2025-03-26 20:00:00+00', 3, true),
-('Массивы, слайсы и отображения', 'Работа с основными структурами данных в Go: массивами, слайсами и отображениями. Примеры использования.', '2025-03-30 18:00:00+00', '2025-03-30 20:00:00+00', 3, true),
-('Алгоритмы сортировки и поиска', 'Реализация и анализ различных алгоритмов сортировки и поиска на языке Go.', '2025-04-03 18:00:00+00', '2025-04-03 20:00:00+00', 3, true);
+-- Тест по React Native (test_id = 9)
+('Какой компонент используется для создания прокручиваемого списка в React Native?', 9, 1, NOW(), NOW()),
+('Какой компонент используется для создания кнопки в React Native?', 9, 1, NOW(), NOW()),
+('Как установить стили для компонента в React Native?', 9, 1, NOW(), NOW()),
+('Какой хук используется для управления состоянием компонента?', 9, 1, NOW(), NOW()),
+('Как передать данные между компонентами в React Native?', 9, 2, NOW(), NOW()),
+('Чем отличается React Native от React для веб-разработки?', 9, 2, NOW(), NOW()),
+('Какой компонент используется для создания навигации между экранами?', 9, 1, NOW(), NOW()),
+('Как хранить данные локально в приложении React Native?', 9, 1, NOW(), NOW()),
+('Какой компонент используется для отображения изображений?', 9, 1, NOW(), NOW()),
+('Как обрабатывать жесты пользователя в React Native?', 9, 2, NOW(), NOW()),
 
--- Уроки для курса "Разработка мобильных приложений на Flutter" (id=4)
-INSERT INTO lessons (name, description, start, "end", course_id, is_active) VALUES
-('Введение в Flutter и Dart', 'Знакомство с Flutter SDK и языком Dart, настройка среды разработки и создание первого приложения.', '2025-03-29 14:00:00+00', '2025-03-29 16:30:00+00', 4, true),
-('Виджеты и компоновка интерфейса', 'Изучение различных виджетов Flutter и принципов компоновки пользовательского интерфейса.', '2025-04-02 14:00:00+00', '2025-04-02 16:30:00+00', 4, true),
-('Управление состоянием и навигация', 'Методы управления состоянием приложения и организация навигации между экранами.', '2025-04-06 14:00:00+00', '2025-04-06 16:30:00+00', 4, true);
+-- Тест по алгоритмам сортировки (test_id = 10)
+('Какая временная сложность алгоритма быстрой сортировки в среднем случае?', 10, 2, NOW(), NOW()),
+('Какова временная сложность сортировки пузырьком в худшем случае?', 10, 1, NOW(), NOW()),
+('Как работает алгоритм сортировки вставками?', 10, 2, NOW(), NOW()),
+('Какая сортировка использует принцип "разделяй и властвуй"?', 10, 1, NOW(), NOW()),
+('В каком случае алгоритм быстрой сортировки имеет худшую производительность?', 10, 2, NOW(), NOW()),
+('Какая сортировка является стабильной?', 10, 1, NOW(), NOW()),
+('Какова временная сложность сортировки слиянием?', 10, 1, NOW(), NOW()),
+('Какой алгоритм сортировки имеет лучшую производительность на почти отсортированных данных?', 10, 2, NOW(), NOW()),
+('Какой алгоритм сортировки используется по умолчанию в Python функции sorted()?', 10, 1, NOW(), NOW()),
+('Какая сортировка основана на структуре данных "куча"?', 10, 1, NOW(), NOW());
 
--- Уроки для курса "DevOps и CI/CD с Docker и Kubernetes" (id=5)
-INSERT INTO lessons (name, description, start, "end", course_id, is_active) VALUES
-('Основы Docker и контейнеризации', 'Введение в контейнеризацию, работа с Docker, создание и управление контейнерами и образами.', '2025-03-25 17:00:00+00', '2025-03-25 19:30:00+00', 5, true),
-('Kubernetes и оркестрация контейнеров', 'Изучение основ Kubernetes, развертывание приложений в кластере и управление ресурсами.', '2025-03-31 17:00:00+00', '2025-03-31 19:30:00+00', 5, true),
-('Настройка CI/CD пайплайнов', 'Создание и настройка непрерывной интеграции и непрерывного развертывания с использованием GitHub Actions.', '2025-04-07 17:00:00+00', '2025-04-07 19:30:00+00', 5, true);
+-- Варианты ответов для теста по основам Python (test_id = 1)
+INSERT INTO answer_variants (number_id, text, is_right, question_id, test_id, created_at, updated_at) VALUES
+-- Вопрос 1: Какой тип данных используется для хранения целых чисел в Python?
+(1, 'int', true, 1, 1, NOW(), NOW()),
+(2, 'float', false, 1, 1, NOW(), NOW()),
+(3, 'str', false, 1, 1, NOW(), NOW()),
+(4, 'bool', false, 1, 1, NOW(), NOW()),
+
+-- Вопрос 2: Какой оператор используется для конкатенации строк в Python?
+(1, '+', true, 2, 1, NOW(), NOW()),
+(2, '&', false, 2, 1, NOW(), NOW()),
+(3, '*', false, 2, 1, NOW(), NOW()),
+(4, '.', false, 2, 1, NOW(), NOW()),
+
+-- Вопрос 3: Как объявить список в Python?
+(1, '[]', true, 3, 1, NOW(), NOW()),
+(2, '{}', false, 3, 1, NOW(), NOW()),
+(3, '()', false, 3, 1, NOW(), NOW()),
+(4, '<>', false, 3, 1, NOW(), NOW()),
+
+-- Вопрос 4: Что выведет код: print(10 // 3)?
+(1, '3', true, 4, 1, NOW(), NOW()),
+(2, '3.33', false, 4, 1, NOW(), NOW()),
+(3, '3.0', false, 4, 1, NOW(), NOW()),
+(4, '4', false, 4, 1, NOW(), NOW()),
+
+-- Вопрос 5: Как проверить тип переменной x в Python?
+(1, 'type(x)', true, 5, 1, NOW(), NOW()),
+(2, 'x.type()', false, 5, 1, NOW(), NOW()),
+(3, 'typeof(x)', false, 5, 1, NOW(), NOW()),
+(4, 'x.getType()', false, 5, 1, NOW(), NOW()),
+
+-- Вопрос 6: Какой метод строки преобразует все символы в верхний регистр?
+(1, 'upper()', true, 6, 1, NOW(), NOW()),
+(2, 'toUpperCase()', false, 6, 1, NOW(), NOW()),
+(3, 'capitalize()', false, 6, 1, NOW(), NOW()),
+(4, 'toUpper()', false, 6, 1, NOW(), NOW()),
+
+-- Вопрос 7: Как объявить словарь в Python?
+(1, '{}', true, 7, 1, NOW(), NOW()),
+(2, '[]', false, 7, 1, NOW(), NOW()),
+(3, '()', false, 7, 1, NOW(), NOW()),
+(4, 'dict()', true, 7, 1, NOW(), NOW()),
+
+-- Вопрос 8: Какой метод используется для добавления элемента в конец списка?
+(1, 'append()', true, 8, 1, NOW(), NOW()),
+(2, 'add()', false, 8, 1, NOW(), NOW()),
+(3, 'push()', false, 8, 1, NOW(), NOW()),
+(4, 'insert()', false, 8, 1, NOW(), NOW()),
+
+-- Вопрос 9: Какой оператор используется для возведения числа в степень?
+(1, '**', true, 9, 1, NOW(), NOW()),
+(2, '^', false, 9, 1, NOW(), NOW()),
+(3, 'pow()', true, 9, 1, NOW(), NOW()),
+(4, '*', false, 9, 1, NOW(), NOW()),
+
+-- Вопрос 10: Что означает строка shebang (#!) в начале Python-скрипта?
+(1, 'Путь к интерпретатору Python', true, 10, 1, NOW(), NOW()),
+(2, 'Комментарий для разработчиков', false, 10, 1, NOW(), NOW()),
+(3, 'Директива компилятора', false, 10, 1, NOW(), NOW()),
+(4, 'Маркер начала файла', false, 10, 1, NOW(), NOW()),
+
+-- Варианты ответов для теста по условным операторам (test_id = 2)
+-- Вопрос 11: Какое ключевое слово используется для объявления условного оператора в Python?
+(1, 'if', true, 11, 2, NOW(), NOW()),
+(2, 'when', false, 11, 2, NOW(), NOW()),
+(3, 'switch', false, 11, 2, NOW(), NOW()),
+(4, 'case', false, 11, 2, NOW(), NOW()),
+
+-- Вопрос 12: Что выведет код: print("да" if 10 > 5 else "нет")?
+(1, 'да', true, 12, 2, NOW(), NOW()),
+(2, 'нет', false, 12, 2, NOW(), NOW()),
+(3, 'True', false, 12, 2, NOW(), NOW()),
+(4, 'False', false, 12, 2, NOW(), NOW()),
+
+-- Вопрос 13: Какое выражение эквивалентно: not (a or b)?
+(1, 'not a and not b', true, 13, 2, NOW(), NOW()),
+(2, 'not a or not b', false, 13, 2, NOW(), NOW()),
+(3, '(not a) or (not b)', false, 13, 2, NOW(), NOW()),
+(4, 'a and b', false, 13, 2, NOW(), NOW()),
+
+-- Вопрос 14: Какой оператор используется для проверки наличия значения в последовательности?
+(1, 'in', true, 14, 2, NOW(), NOW()),
+(2, 'contains', false, 14, 2, NOW(), NOW()),
+(3, 'has', false, 14, 2, NOW(), NOW()),
+(4, 'exists', false, 14, 2, NOW(), NOW()),
+
+-- Вопрос 15: Как написать условие, проверяющее, что число находится в диапазоне от 10 до 20 включительно?
+(1, '10 <= x <= 20', true, 15, 2, NOW(), NOW()),
+(2, 'x >= 10 and x <= 20', true, 15, 2, NOW(), NOW()),
+(3, 'x between 10 and 20', false, 15, 2, NOW(), NOW()),
+(4, '10 < x < 20', false, 15, 2, NOW(), NOW()),
+
+-- Вопрос 16: Какое значение считается False в условных выражениях?
+(1, '0', true, 16, 2, NOW(), NOW()),
+(2, '""', true, 16, 2, NOW(), NOW()),
+(3, '[]', true, 16, 2, NOW(), NOW()),
+(4, 'None', true, 16, 2, NOW(), NOW()),
+
+-- Вопрос 17: Что выведет код: print(1 == "1")?
+(1, 'False', true, 17, 2, NOW(), NOW()),
+(2, 'True', false, 17, 2, NOW(), NOW()),
+(3, 'TypeError', false, 17, 2, NOW(), NOW()),
+(4, '0', false, 17, 2, NOW(), NOW()),
+
+-- Вопрос 18: Какой оператор используется для проверки идентичности объектов?
+(1, 'is', true, 18, 2, NOW(), NOW()),
+(2, '==', false, 18, 2, NOW(), NOW()),
+(3, '===', false, 18, 2, NOW(), NOW()),
+(4, 'equals', false, 18, 2, NOW(), NOW()),
+
+-- Вопрос 19: Как написать конструкцию "если-иначе" в одну строку?
+(1, 'результат if условие else альтернатива', true, 19, 2, NOW(), NOW()),
+(2, 'if условие then результат else альтернатива', false, 19, 2, NOW(), NOW()),
+(3, 'условие ? результат : альтернатива', false, 19, 2, NOW(), NOW()),
+(4, 'результат when условие else альтернатива', false, 19, 2, NOW(), NOW()),
+
+-- Вопрос 20: Как проверить, что переменная равна одному из нескольких значений?
+(1, 'x in [a, b, c]', true, 20, 2, NOW(), NOW()),
+(2, 'x == a or x == b or x == c', true, 20, 2, NOW(), NOW()),
+(3, 'x equals any(a, b, c)', false, 20, 2, NOW(), NOW()),
+(4, 'x.matches(a, b, c)', false, 20, 2, NOW(), NOW()),
+
+-- Варианты ответов для теста по циклам (test_id = 3)
+-- Вопрос 21: Какой цикл используется для выполнения блока кода заданное количество раз?
+(1, 'for', true, 21, 3, NOW(), NOW()),
+(2, 'while', false, 21, 3, NOW(), NOW()),
+(3, 'loop', false, 21, 3, NOW(), NOW()),
+(4, 'repeat', false, 21, 3, NOW(), NOW()),
+
+-- Вопрос 22: Как досрочно завершить цикл в Python?
+(1, 'break', true, 22, 3, NOW(), NOW()),
+(2, 'exit', false, 22, 3, NOW(), NOW()),
+(3, 'stop', false, 22, 3, NOW(), NOW()),
+(4, 'return', false, 22, 3, NOW(), NOW()),
+
+-- Вопрос 23: Как пропустить текущую итерацию цикла и перейти к следующей?
+(1, 'continue', true, 23, 3, NOW(), NOW()),
+(2, 'skip', false, 23, 3, NOW(), NOW()),
+(3, 'next', false, 23, 3, NOW(), NOW()),
+(4, 'pass', false, 23, 3, NOW(), NOW()),
+
+-- Вопрос 24: Как создать цикл, который выполнится ровно 10 раз?
+(1, 'for i in range(10):', true, 24, 3, NOW(), NOW()),
+(2, 'for i in range(1, 11):', true, 24, 3, NOW(), NOW()),
+(3, 'for i in range(0, 10):', true, 24, 3, NOW(), NOW()),
+(4, 'while count < 10:', false, 24, 3, NOW(), NOW()),
+
+-- Вопрос 25: Что делает функция enumerate() при использовании с циклом for?
+(1, 'Возвращает пары (индекс, элемент)', true, 25, 3, NOW(), NOW()),
+(2, 'Подсчитывает количество элементов', false, 25, 3, NOW(), NOW()),
+(3, 'Сортирует элементы перед итерацией', false, 25, 3, NOW(), NOW()),
+(4, 'Преобразует элементы в числа', false, 25, 3, NOW(), NOW()),
+
+-- Вопрос 26: Какой метод цикла for используется для итерации одновременно по нескольким последовательностям?
+(1, 'zip()', true, 26, 3, NOW(), NOW()),
+(2, 'join()', false, 26, 3, NOW(), NOW()),
+(3, 'merge()', false, 26, 3, NOW(), NOW()),
+(4, 'combine()', false, 26, 3, NOW(), NOW()),
+
+-- Вопрос 27: Как создать бесконечный цикл в Python?
+(1, 'while True:', true, 27, 3, NOW(), NOW()),
+(2, 'for i in range(∞):', false, 27, 3, NOW(), NOW()),
+(3, 'loop:', false, 27, 3, NOW(), NOW()),
+(4, 'while 1 == 1:', true, 27, 3, NOW(), NOW()),
+
+-- Вопрос 28: Что выведет код: for i in range(1, 6, 2): print(i)?
+(1, '1 3 5', true, 28, 3, NOW(), NOW()),
+(2, '1 2 3 4 5', false, 28, 3, NOW(), NOW()),
+(3, '2 4', false, 28, 3, NOW(), NOW()),
+(4, '1 2 3', false, 28, 3, NOW(), NOW()),
+
+-- Вопрос 29: Какой цикл гарантированно выполнится хотя бы один раз?
+(1, 'Цикл do-while (не существует в Python)', false, 29, 3, NOW(), NOW()),
+(2, 'while', false, 29, 3, NOW(), NOW()),
+(3, 'for', false, 29, 3, NOW(), NOW()),
+(4, 'В Python нет такого цикла', true, 29, 3, NOW(), NOW()),
+
+-- Вопрос 30: Как итерироваться по ключам и значениям словаря одновременно?
+(1, 'for key, value in dict.items():', true, 30, 3, NOW(), NOW()),
+(2, 'for key, value in dict:', false, 30, 3, NOW(), NOW()),
+(3, 'for each key, value in dict:', false, 30, 3, NOW(), NOW()),
+(4, 'for (key, value) from dict:', false, 30, 3, NOW(), NOW()),
+
+-- Варианты ответов для теста по функциям (test_id = 4)
+-- Вопрос 31: Какое ключевое слово используется для объявления функции в Python?
+(1, 'def', true, 31, 4, NOW(), NOW()),
+(2, 'function', false, 31, 4, NOW(), NOW()),
+(3, 'fun', false, 31, 4, NOW(), NOW()),
+(4, 'func', false, 31, 4, NOW(), NOW()),
+
+-- Вопрос 32: Что такое рекурсивная функция?
+(1, 'Функция, которая вызывает сама себя', true, 32, 4, NOW(), NOW()),
+(2, 'Функция с переменным числом аргументов', false, 32, 4, NOW(), NOW()),
+(3, 'Функция, которая возвращает другую функцию', false, 32, 4, NOW(), NOW()),
+(4, 'Функция, использующая цикл внутри', false, 32, 4, NOW(), NOW()),
+
+-- Вопрос 33: Как определить функцию с переменным числом аргументов?
+(1, 'Использовать *args', true, 33, 4, NOW(), NOW()),
+(2, 'Использовать **kwargs', true, 33, 4, NOW(), NOW()),
+(3, 'Использовать параметры по умолчанию', false, 33, 4, NOW(), NOW()),
+(4, 'Определить аргументы как список', false, 33, 4, NOW(), NOW()),
+
+-- Вопрос 34: Что означает *args в определении функции?
+(1, 'Принимает произвольное количество позиционных аргументов', true, 34, 4, NOW(), NOW()),
+(2, 'Обозначает обязательные аргументы', false, 34, 4, NOW(), NOW()),
+(3, 'Распаковывает список аргументов', false, 34, 4, NOW(), NOW()),
+(4, 'Объявляет аргументы как кортеж', false, 34, 4, NOW(), NOW()),
+
+-- Вопрос 35: Что такое лямбда-функция в Python?
+(1, 'Анонимная функция', true, 35, 4, NOW(), NOW()),
+(2, 'Функция высшего порядка', false, 35, 4, NOW(), NOW()),
+(3, 'Функция с отложенным выполнением', false, 35, 4, NOW(), NOW()),
+(4, 'Короткая функция с одним выражением', true, 35, 4, NOW(), NOW()),
+
+-- Вопрос 36: Какой тип данных возвращает функция по умолчанию, если нет оператора return?
+(1, 'None', true, 36, 4, NOW(), NOW()),
+(2, 'False', false, 36, 4, NOW(), NOW()),
+(3, '0', false, 36, 4, NOW(), NOW()),
+(4, 'void', false, 36, 4, NOW(), NOW()),
+
+-- Вопрос 37: Что такое замыкание в Python?
+(1, 'Функция, которая запоминает значения из внешней области видимости', true, 37, 4, NOW(), NOW()),
+(2, 'Функция, которая не может быть вызвана извне', false, 37, 4, NOW(), NOW()),
+(3, 'Функция, которая защищает доступ к переменным', false, 37, 4, NOW(), NOW()),
+(4, 'Функция внутри другой функции', false, 37, 4, NOW(), NOW()),
+
+-- Вопрос 38: Как передать аргумент в функцию по имени?
+(1, 'имя_параметра=значение', true, 38, 4, NOW(), NOW()),
+(2, 'значение as имя_параметра', false, 38, 4, NOW(), NOW()),
+(3, 'параметр: значение', false, 38, 4, NOW(), NOW()),
+(4, 'name=имя_параметра(значение)', false, 38, 4, NOW(), NOW()),
+
+-- Вопрос 39: Что означает **kwargs в определении функции?
+(1, 'Принимает произвольное количество именованных аргументов', true, 39, 4, NOW(), NOW()),
+(2, 'Обозначает аргументы с ключевыми словами', false, 39, 4, NOW(), NOW()),
+(3, 'Создает словарь аргументов', true, 39, 4, NOW(), NOW()),
+(4, 'Указывает на необязательные аргументы', false, 39, 4, NOW(), NOW()),
+
+-- Вопрос 40: Что такое декоратор в Python?
+(1, 'Функция, которая принимает другую функцию и расширяет её поведение', true, 40, 4, NOW(), NOW()),
+(2, 'Синтаксический сахар для метаклассов', false, 40, 4, NOW(), NOW()),
+(3, 'Функция для украшения вывода в консоль', false, 40, 4, NOW(), NOW()),
+(4, 'Аннотация типов данных', false, 40, 4, NOW(), NOW()),
+
+-- Варианты ответов для теста по основам JavaScript (test_id = 5)
+-- Вопрос 41: Какой тип данных не является примитивным в JavaScript?
+(1, 'Object', true, 41, 5, NOW(), NOW()),
+(2, 'Number', false, 41, 5, NOW(), NOW()),
+(3, 'Boolean', false, 41, 5, NOW(), NOW()),
+(4, 'Symbol', false, 41, 5, NOW(), NOW()),
+
+-- Вопрос 42: Как объявить переменную в JavaScript?
+(1, 'let x = 5;', true, 42, 5, NOW(), NOW()),
+(2, 'var x = 5;', true, 42, 5, NOW(), NOW()),
+(3, 'const x = 5;', true, 42, 5, NOW(), NOW()),
+(4, 'int x = 5;', false, 42, 5, NOW(), NOW()),
+
+-- Вопрос 43: Какой оператор используется для строгого сравнения в JavaScript?
+(1, '===', true, 43, 5, NOW(), NOW()),
+(2, '==', false, 43, 5, NOW(), NOW()),
+(3, '=', false, 43, 5, NOW(), NOW()),
+(4, '!==', false, 43, 5, NOW(), NOW()),
+
+-- Вопрос 44: Как проверить, является ли переменная объектом определенного типа?
+(1, 'instanceof', true, 44, 5, NOW(), NOW()),
+(2, 'typeof', false, 44, 5, NOW(), NOW()),
+(3, 'isInstanceOf', false, 44, 5, NOW(), NOW()),
+(4, 'constructor', false, 44, 5, NOW(), NOW()),
+
+-- Вопрос 45: Что такое hoisting в JavaScript?
+(1, 'Поднятие объявлений переменных и функций в начало области видимости', true, 45, 5, NOW(), NOW()),
+(2, 'Преобразование типов данных', false, 45, 5, NOW(), NOW()),
+(3, 'Оптимизация кода для быстрого выполнения', false, 45, 5, NOW(), NOW()),
+(4, 'Процесс размещения элементов в DOM', false, 45, 5, NOW(), NOW()),
+
+-- Вопрос 46: Какие есть способы объявления функции в JavaScript?
+(1, 'function declaration', true, 46, 5, NOW(), NOW()),
+(2, 'function expression', true, 46, 5, NOW(), NOW()),
+(3, 'arrow function', true, 46, 5, NOW(), NOW()),
+(4, 'method declaration', true, 46, 5, NOW(), NOW()),
+
+-- Вопрос 47: Как создать объект в JavaScript?
+(1, '{}', true, 47, 5, NOW(), NOW()),
+(2, 'new Object()', true, 47, 5, NOW(), NOW()),
+(3, 'Object.create(null)', true, 47, 5, NOW(), NOW()),
+(4, 'constructor()', false, 47, 5, NOW(), NOW()),
+
+-- Вопрос 48: Что такое замыкание в JavaScript?
+(1, 'Функция, которая имеет доступ к переменным из внешней области видимости', true, 48, 5, NOW(), NOW()),
+(2, 'Функция, которая не может быть перезаписана', false, 48, 5, NOW(), NOW()),
+(3, 'Функция, которая вызывает сама себя', false, 48, 5, NOW(), NOW()),
+(4, 'Объект, содержащий приватные методы', false, 48, 5, NOW(), NOW()),
+
+-- Вопрос 49: Что выведет код: console.log(typeof null)?
+(1, 'object', true, 49, 5, NOW(), NOW()),
+(2, 'null', false, 49, 5, NOW(), NOW()),
+(3, 'undefined', false, 49, 5, NOW(), NOW()),
+(4, 'number', false, 49, 5, NOW(), NOW()),
+
+-- Вопрос 50: Что такое прототипное наследование?
+(1, 'Механизм, по которому объекты наследуют свойства от других объектов', true, 50, 5, NOW(), NOW()),
+(2, 'Процесс создания новых объектов на основе шаблонов', false, 50, 5, NOW(), NOW()),
+(3, 'Способ инкапсуляции данных в JavaScript', false, 50, 5, NOW(), NOW()),
+(4, 'Техника оптимизации памяти', false, 50, 5, NOW(), NOW()),
+
+-- Варианты ответов для теста по DOM (test_id = 6)
+-- Вопрос 51: Какой метод используется для получения элемента по ID в JavaScript?
+(1, 'getElementById()', true, 51, 6, NOW(), NOW()),
+(2, 'querySelector()', true, 51, 6, NOW(), NOW()),
+(3, 'findElement()', false, 51, 6, NOW(), NOW()),
+(4, 'selectById()', false, 51, 6, NOW(), NOW()),
+
+-- Вопрос 52: Какой метод используется для добавления класса к элементу?
+(1, 'classList.add()', true, 52, 6, NOW(), NOW()),
+(2, 'addClass()', false, 52, 6, NOW(), NOW()),
+(3, 'className +=', true, 52, 6, NOW(), NOW()),
+(4, 'addCSSClass()', false, 52, 6, NOW(), NOW()),
+
+-- Вопрос 53: Как создать новый элемент DOM?
+(1, 'document.createElement()', true, 53, 6, NOW(), NOW()),
+(2, 'document.newElement()', false, 53, 6, NOW(), NOW()),
+(3, 'document.makeElement()', false, 53, 6, NOW(), NOW()),
+(4, 'document.addElement()', false, 53, 6, NOW(), NOW()),
+
+-- Вопрос 54: Какой метод используется для добавления элемента в конец родительского элемента?
+(1, 'appendChild()', true, 54, 6, NOW(), NOW()),
+(2, 'append()', true, 54, 6, NOW(), NOW()),
+(3, 'addChild()', false, 54, 6, NOW(), NOW()),
+(4, 'insertLast()', false, 54, 6, NOW(), NOW()),
+
+-- Вопрос 55: Как получить все элементы с определенным классом?
+(1, 'getElementsByClassName()', true, 55, 6, NOW(), NOW()),
+(2, 'querySelectorAll(".class")', true, 55, 6, NOW(), NOW()),
+(3, 'findByClass()', false, 55, 6, NOW(), NOW()),
+(4, 'getElementByClass()', false, 55, 6, NOW(), NOW()),
+
+-- Вопрос 56: Какое свойство элемента используется для изменения его HTML-содержимого?
+(1, 'innerHTML', true, 56, 6, NOW(), NOW()),
+(2, 'innerContent', false, 56, 6, NOW(), NOW()),
+(3, 'htmlContent', false, 56, 6, NOW(), NOW()),
+(4, 'textContent', false, 56, 6, NOW(), NOW()),
+
+-- Вопрос 57: Как удалить элемент из DOM?
+(1, 'element.remove()', true, 57, 6, NOW(), NOW()),
+(2, 'element.parentNode.removeChild(element)', true, 57, 6, NOW(), NOW()),
+(3, 'delete element', false, 57, 6, NOW(), NOW()),
+(4, 'element.delete()', false, 57, 6, NOW(), NOW()),
+
+-- Вопрос 58: Как добавить обработчик события к элементу?
+(1, 'addEventListener()', true, 58, 6, NOW(), NOW()),
+(2, 'attachEvent()', false, 58, 6, NOW(), NOW()),
+(3, 'on[event] = function() {}', true, 58, 6, NOW(), NOW()),
+(4, 'bindEvent()', false, 58, 6, NOW(), NOW()),
+
+-- Вопрос 59: Какой метод используется для выбора элементов с помощью CSS-селекторов?
+(1, 'querySelector()', true, 59, 6, NOW(), NOW()),
+(2, 'querySelectorAll()', true, 59, 6, NOW(), NOW()),
+(3, 'selectCSS()', false, 59, 6, NOW(), NOW()),
+(4, 'findByCSS()', false, 59, 6, NOW(), NOW()),
+
+-- Вопрос 60: Как получить значение атрибута элемента?
+(1, 'getAttribute()', true, 60, 6, NOW(), NOW()),
+(2, 'element.attributeName', true, 60, 6, NOW(), NOW()),
+(3, 'getElementAttribute()', false, 60, 6, NOW(), NOW()),
+(4, 'element.getAttr()', false, 60, 6, NOW(), NOW()),
+
+SELECT * FROM "modules" WHERE course_id = 5

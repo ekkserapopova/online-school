@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"log"
+	"gorm.io/gorm"
 	"onlineschool/internal/models"
 )
 
@@ -14,21 +14,39 @@ func (r *Repo) GetCourses(name string) ([]models.Course, error) {
 	return courses, nil
 }
 
-func (r *Repo) GetCourse(id int) (models.Course, error) {
+func (r *Repo) GetCourse(courseID int) (models.Course, error) {
 	var course models.Course
-	err := r.db.Where("id = ?", id).First(&course).Error
+
+	err := r.db.Preload("Modules", func(db *gorm.DB) *gorm.DB {
+		return db.Order("id ASC")
+	}).Where("id = ?", courseID).
+		First(&course).Error
+
 	if err != nil {
 		return course, err
 	}
+
+	for i, module := range course.Modules {
+		if module.OpenForAll {
+			var lessons []models.Lesson
+			if err := r.db.Where("module_id = ?", module.ID).
+				Order("id ASC").
+				Find(&lessons).Error; err != nil {
+				return course, err
+			}
+			course.Modules[i].Lessons = lessons
+		}
+	}
+
 	return course, nil
 }
 
-func (r *Repo) GetUsersCourses(userID int) ([]models.Course, error) {
+func (r *Repo) GetStudentsCourses(userID int) ([]models.Course, error) {
 	var courses []models.Course
 	err := r.db.Table("students_courses").
 		Select("courses.*").
 		Joins("join courses on students_courses.course_id = courses.id").
-		Where("students_courses.student_id = ?", userID).
+		Where("students_courses.user_id = ?", userID).
 		Find(&courses).Error
 	if err != nil {
 		return nil, err
@@ -45,42 +63,28 @@ func (r *Repo) GetLanguages(name string) ([]models.Language, error) {
 	return languages, nil
 }
 
-func (r *Repo) EnrollStudent(userID, courseID int) error {
-	var schedule models.Schedule
-	schedule.StudentID = userID
-	log.Println(schedule.ID)
-
+func (r *Repo) GetStudentsCourse(userID, courseID int) (models.Course, error) {
 	var course models.Course
-	err := r.db.Where("id = ?", courseID).First(&course).Error
+	err := r.db.Table("students_courses").
+		Select("courses.*").Preload("Modules.Lessons").Preload("Modules.Tests").
+		Joins("join courses on students_courses.course_id = courses.id").
+		Where("students_courses.course_id = ? AND students_courses.user_id = ?", courseID, userID).
+		Take(&course).Error
+
 	if err != nil {
-		return err
+		return course, err
 	}
 
-	var payment models.Payment
+	return course, nil
+}
 
-	err = r.db.Where("course_id = ? and student_id = ?", courseID, userID).First(&payment).Error
+func (r *Repo) EnrollStudent(userID, courseID int) error {
 
-	if err != nil || payment.Status != "paid" {
-		log.Println(err, payment.Status)
-		log.Println("Payment not found, creating a new one")
-		return err
-	}
-
-	err = r.db.Where("student_id = ?", userID).FirstOrCreate(&schedule).Error
-	if err != nil {
-		return err
-	}
-
-	err = r.db.Table("students_courses").Create(map[string]interface{}{
-		"student_id": userID,
-		"course_id":  courseID,
+	err := r.db.Table("students_courses").Create(map[string]interface{}{
+		"user_id":   userID,
+		"course_id": courseID,
 	}).Error
 	if err != nil {
-		return err
-	}
-
-	if err := r.db.Table("schedules_courses").Create(map[string]interface{}{
-		"schedule_id": schedule.ID, "course_id": courseID}).Error; err != nil {
 		return err
 	}
 
@@ -100,7 +104,7 @@ func (r *Repo) GetLessonsByCourseID(courseID int) ([]models.Lesson, error) {
 func (r *Repo) IsStudentEnrolledInCourse(studentID, courseID int) (bool, error) {
 	var count int64
 	err := r.db.Table("students_courses").
-		Where("student_id = ? AND course_id = ?", studentID, courseID).
+		Where("user_id = ? AND course_id = ?", studentID, courseID).
 		Count(&count).Error
 
 	if err != nil {

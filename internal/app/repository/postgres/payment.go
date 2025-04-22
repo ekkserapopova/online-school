@@ -9,6 +9,7 @@ import (
 )
 
 func (r *Repo) GetPayment(userID, courseID int) (models.Payment, error) {
+
 	var payment models.Payment
 	err := r.db.Preload("Student").Preload("Course").Where("student_id = ? AND course_id = ?", userID, courseID).First(&payment).Error
 	if err != nil {

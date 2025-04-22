@@ -12,7 +12,7 @@ type Repo struct {
 	db *gorm.DB
 }
 
-func NewRepository(connectionString string) (*Repo, error) {
+func NewRepo(connectionString string) (*Repo, error) {
 	db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -23,14 +23,17 @@ func NewRepository(connectionString string) (*Repo, error) {
 		&models.Language{},
 		&models.Course{},
 		&models.Lesson{},
+		&models.Module{},
 		&models.Payment{},
-		&models.Schedule{},
 		&models.Homework{},
 		&models.Material{},
 		&models.Review{},
 		&models.Test{},
 		&models.Question{},
-		&models.Answer{},
+		&models.AnswerVariant{},
+		&models.StudentAnswer{},
+		&models.CompletedTest{},
+		&models.Task{},
 	)
 
 	if err != nil {

@@ -26,14 +26,15 @@ func main() {
 		&models.Language{},
 		&models.Course{},
 		&models.Lesson{},
+		&models.Module{},
 		&models.Payment{},
-		&models.Schedule{},
 		&models.Homework{},
 		&models.Material{},
 		&models.Review{},
 		&models.Test{},
 		&models.Question{},
-		&models.Answer{},
+		&models.AnswerVariant{},
+		&models.StudentAnswer{},
 	)
 	if err != nil {
 		panic("cant migrate db")

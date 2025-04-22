@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -17,14 +16,26 @@ func (h *Handler) GetCourses(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"courses": courses})
 }
 
-func (h *Handler) GetUsersCourses(c *gin.Context) {
-	userID, ok := c.Get("userId")
+func (h *Handler) GetCourse(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
+	}
+	course, err := h.repo.GetCourse(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+	}
+	c.JSON(http.StatusOK, gin.H{"course": course})
+}
+
+func (h *Handler) GetStudentsCourses(c *gin.Context) {
+	studentID, ok := c.Get("userId")
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	user, _ := h.repo.GetByID(userID.(int))
-	courses, err := h.repo.GetUsersCourses(user.ID)
+	//user, _ := h.repo.GetByID(userID.(int))
+	courses, err := h.repo.GetStudentsCourses(studentID.(int))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
@@ -36,15 +47,25 @@ func (h *Handler) GetUsersCourses(c *gin.Context) {
 	}
 }
 
-func (h *Handler) GetCourse(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
+func (h *Handler) GetStudentsCourse(c *gin.Context) {
+	studentID, ok := c.Get("userId")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
-	course, err := h.repo.GetCourse(id)
+
+	courseID, err := strconv.Atoi(c.Param("courseID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+
+	course, err := h.repo.GetStudentsCourse(studentID.(int), courseID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"course": course})
 }
 
@@ -62,13 +83,13 @@ func (h *Handler) GetLanguages(c *gin.Context) {
 
 func (h *Handler) EnrollStudent(c *gin.Context) {
 
-	userID, ok := c.Get("userId")
+	studentID, ok := c.Get("userId")
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	user, _ := h.repo.GetByID(userID.(int))
+	//user, _ := h.repo.GetByID(studentID.(int))
 
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 
@@ -76,7 +97,7 @@ func (h *Handler) EnrollStudent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
 		return
 	}
-	err = h.repo.EnrollStudent(user.ID, courseID)
+	err = h.repo.EnrollStudent(studentID.(int), courseID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
@@ -86,14 +107,13 @@ func (h *Handler) EnrollStudent(c *gin.Context) {
 }
 
 func (h *Handler) IsStudentEnrolledInCourse(c *gin.Context) {
-	userID, ok := c.Get("userId")
-	log.Println(userID)
+	studentID, ok := c.Get("userId")
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	user, _ := h.repo.GetByID(userID.(int))
+	//user, _ := h.repo.GetByID(userID.(int))
 
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 
@@ -101,7 +121,7 @@ func (h *Handler) IsStudentEnrolledInCourse(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
 		return
 	}
-	isEnrolled, err := h.repo.IsStudentEnrolledInCourse(user.ID, courseID)
+	isEnrolled, err := h.repo.IsStudentEnrolledInCourse(studentID.(int), courseID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return

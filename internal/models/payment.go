@@ -9,7 +9,7 @@ type Payment struct {
 	Date      time.Time `json:"date"`
 	StudentID int       `gorm:"not null" json:"studentID"`
 	Student   User      `gorm:"foreignKey:StudentID" json:"student"`
-	CourseID  int       `gorm:"not null" json:"courseID"`
+	CourseID  int       `gorm:"not null" json:"course_id"`
 	Course    Course    `gorm:"foreignKey:CourseID" json:"course"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`

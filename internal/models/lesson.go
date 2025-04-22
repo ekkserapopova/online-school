@@ -8,14 +8,21 @@ type Lesson struct {
 	Description string    `gorm:"type:text" json:"description"`
 	Start       time.Time `gorm:"not null" json:"start"`
 	End         time.Time `gorm:"not null" json:"end"`
-	CourseID    int       `gorm:"not null" json:"courseID"`
-	IsActive    bool      `gorm:"not null" json:"is_active"` //опубликован или нет
-	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+	ModuleID    int       `gorm:"not null" json:"module_id"`
+	Module      Module    `gorm:"foreignKey:ModuleID" json:"module"`
+
+	IsActive  bool      `gorm:"not null" json:"is_active"` //опубликован или нет
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	//Course      Course     `gorm:"foreignKey:CourseID" json:"course"`
 	//TODO: add to json
 	Homeworks []Homework `gorm:"foreignKey:LessonID" json:"-"`
 	Materials []Material `gorm:"foreignKey:LessonID" json:"-"`
+}
+
+type LessonResponse struct {
+	Lesson     Lesson `json:"lesson"`
+	CourseName string `json:"course_name"`
 }
 
 type Material struct { //надо связь добавить

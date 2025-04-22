@@ -20,7 +20,6 @@ type User struct {
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	Overview  string    `gorm:"type:text" json:"overview"`
 	//TODO: add to json
-	Courses  []Course  `gorm:"many2many:students_courses;" json:"-"`
-	Payments []Payment `gorm:"foreignKey:StudentID" json:"-"`
-	Schedule Schedule  `gorm:"foreignKey:StudentID" json:"-"`
+	Courses []Course `gorm:"many2many:students_courses;" json:"-"`
+	//Payments []Payment `gorm:"foreignKey:StudentID,constraint:fk_users_reviews" json:"-"`
 }

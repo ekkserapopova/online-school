@@ -9,9 +9,9 @@ import (
 )
 
 func (h *Handler) GetPayment(c *gin.Context) {
-	userID, ok := c.Get("userId")
+	studentID, ok := c.Get("userId")
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
@@ -21,7 +21,7 @@ func (h *Handler) GetPayment(c *gin.Context) {
 		return
 	}
 
-	payment, err := h.repo.GetPayment(userID.(int), courseID)
+	payment, err := h.repo.GetPayment(studentID.(int), courseID)
 	if err != nil {
 		log.Println("Error getting payment")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
@@ -32,29 +32,24 @@ func (h *Handler) GetPayment(c *gin.Context) {
 }
 
 func (h *Handler) AddPayment(c *gin.Context) {
-	userID, ok := c.Get("userId")
+	studentID, ok := c.Get("userId")
 	if !ok {
-		log.Fatal("User ID not found in token")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	log.Println("User ID found in token")
-
-	user, _ := h.repo.GetByID(userID.(int))
 
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 
 	if err != nil {
-		log.Fatal("Invalid course id")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
 		return
 	}
 
 	log.Println("Course ID found successful")
 
-	payment, err := h.repo.AddPayment(user.ID, courseID)
+	payment, err := h.repo.AddPayment(studentID.(int), courseID)
 	if err != nil {
-		log.Fatal("Error in repo method 'AddPayment'")
+		//log.Fatal("Error in repo method 'AddPayment'")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
@@ -63,9 +58,9 @@ func (h *Handler) AddPayment(c *gin.Context) {
 }
 
 func (h *Handler) UpdatePayment(c *gin.Context) {
-	userID, ok := c.Get("userId")
+	studentID, ok := c.Get("userId")
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
@@ -74,7 +69,7 @@ func (h *Handler) UpdatePayment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
 		return
 	}
-	payment, err := h.repo.GetPayment(userID.(int), courseID)
+	payment, err := h.repo.GetPayment(studentID.(int), courseID)
 	if err != nil {
 		log.Println("Error getting payment")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})

@@ -1,66 +1,110 @@
 package repo
 
 import (
+	"errors"
 	"log"
 	"onlineschool/internal/models"
-	"sort"
 	"time"
 )
 
-func (r *Repo) GetLessons(studentID int, period string) ([]models.Lesson, error) {
-	var schedule models.Schedule
+func (r *Repo) GetLessons(studentID int, period string) ([]models.LessonResponse, error) {
+	var courses []models.Course
 
-	// Загружаем расписание с предзагрузкой курсов
-	err := r.db.Preload("Courses").Where("student_id = ?", studentID).First(&schedule).Error
+	err := r.db.
+		Table("students_courses").
+		Select("courses.*").
+		Joins("join courses on students_courses.course_id = courses.id").
+		Where("students_courses.user_id = ?", studentID).
+		Find(&courses).Error
+
 	if err != nil {
-		log.Printf("Ошибка при загрузке расписания: %v", err)
-		return nil, err
+		return []models.LessonResponse{}, err
 	}
 
-	log.Println(schedule.Courses)
+	log.Printf("Найдено курсов в расписании: %d", len(courses))
 
-	log.Printf("Найдено курсов в расписании: %d", len(schedule.Courses))
-
-	var allLessons []models.Lesson
+	var result []models.LessonResponse
 
 	// Для каждого курса в расписании загружаем уроки с фильтрацией по дате
-	for _, course := range schedule.Courses {
-		var courseLessons []models.Lesson
-		switch period {
-		case "future": // будущие уроки
-			err := r.db.Preload("Course.Teacher").Where("course_id = ? and start >= ?",
-				course.ID, time.Now()).Find(&courseLessons).Error
+	for _, course := range courses {
+		var courseModules []models.Module
+		err = r.db.Where("course_id = ?", course.ID).
+			Preload("Lessons").
+			Find(&courseModules).Error
 
-			if err != nil {
-				log.Printf("Ошибка при загрузке уроков для курса %d: %v", course.ID, err)
-				continue
-			}
-
-			log.Printf("Курс %d (%s): найдено уроков: %d", course.ID, course.Name, len(courseLessons))
-		case "past": // прошедшие уроки
-			err := r.db.Preload("Course.Teacher").Where("course_id = ? and start < ?",
-				course.ID, time.Now()).Find(&courseLessons).Error
-
-			if err != nil {
-				log.Printf("Ошибка при загрузке уроков для курса %d: %v", course.ID, err)
-				continue
-			}
-		case "all":
-			err := r.db.Preload("Course.Teacher").Where("course_id = ?",
-				course.ID).Find(&courseLessons).Error
-			if err != nil {
-				log.Printf("Ошибка при загрузке уроков для курса %d: %v", course.ID, err)
-				continue
-			}
-
+		if err != nil {
+			return []models.LessonResponse{}, err
 		}
-		allLessons = append(allLessons, courseLessons...)
+
+		var filteredLessons []models.Lesson
+
+		for _, module := range courseModules {
+			var lessons []models.Lesson
+
+			switch period {
+			case "future": // будущие уроки
+				lessons, err = r.GetFutureLessons(module.ID)
+			case "past": // прошедшие уроки
+				lessons, err = r.GetPastLessons(module.ID)
+			case "all":
+				lessons, err = r.GetAllLessonsByModule(module.ID)
+			default:
+				return []models.LessonResponse{}, errors.New("Period is not valid")
+			}
+
+			if err != nil {
+				return []models.LessonResponse{}, err
+			}
+
+			filteredLessons = append(filteredLessons, lessons...)
+		}
+
+		// Создаём LessonResponse для каждого урока
+		for _, lesson := range filteredLessons {
+			result = append(result, models.LessonResponse{
+				Lesson:     lesson,
+				CourseName: course.Name,
+			})
+		}
 	}
-	sort.Slice(allLessons, func(i, j int) bool {
-		return allLessons[i].Start.Before(allLessons[j].Start)
-	})
-	log.Printf("Всего найдено уроков: %d", len(allLessons))
-	return allLessons, nil
+
+	return result, nil
+}
+
+func (r *Repo) GetAllLessonsByModule(moduleID int) ([]models.Lesson, error) {
+	var lessons []models.Lesson
+	err := r.db.Where("module_id = ?", moduleID).Find(&lessons).Error
+
+	if err != nil {
+		return []models.Lesson{}, err
+	}
+	return lessons, nil
+}
+
+func (r *Repo) GetPastLessons(moduleID int) ([]models.Lesson, error) {
+	var pastLessons []models.Lesson
+
+	err := r.db.Where("module_id = ? AND start < ?", moduleID, time.Now()).
+		Find(&pastLessons).Error
+
+	if err != nil {
+		return []models.Lesson{}, err
+	}
+
+	return pastLessons, nil
+}
+
+func (r *Repo) GetFutureLessons(moduleID int) ([]models.Lesson, error) {
+	var futureLessons []models.Lesson
+
+	err := r.db.Where("module_id = ? AND start > ?", moduleID, time.Now()).
+		Find(&futureLessons).Error
+
+	if err != nil {
+		return []models.Lesson{}, err
+	}
+
+	return futureLessons, nil
 }
 
 func (r *Repo) GetLesson(lessonId int) (models.Lesson, error) {

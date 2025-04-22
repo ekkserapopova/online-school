@@ -31,7 +31,7 @@ func main() {
 
 	connection := dsn.FromEnv()
 
-	repo, _ := repo.NewRepository(connection)
+	repo, _ := repo.NewRepo(connection)
 
 	redisConfig := redis.InitRedisConfig()
 
