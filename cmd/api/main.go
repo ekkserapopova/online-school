@@ -6,7 +6,10 @@ import (
 	"onlineschool/internal/app/dsn"
 	"onlineschool/internal/app/handler"
 	repo "onlineschool/internal/app/repository/postgres"
+	"onlineschool/internal/llm/provider"
+	"onlineschool/internal/llm/service"
 	"onlineschool/internal/redis"
+	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -39,7 +42,17 @@ func main() {
 	if err != nil {
 	}
 
-	handler := handler.NewHandler(repo, redisClient)
+	apiKey := os.Getenv("API_KEY")
+
+	if apiKey == "" {
+		log.Fatal("OPENAI_API_KEY не установлен в .env")
+	}
+
+	openAIProvider := provider.NewOpenAIProvider(apiKey, os.Getenv("OPENAI_MODEL"))
+
+	codeEvaluator := service.NewCodeEvaluator(openAIProvider)
+
+	handler := handler.NewHandler(repo, redisClient, *codeEvaluator)
 
 	r := handler.InitRoutes()
 	r.Run()

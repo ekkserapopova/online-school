@@ -48,4 +48,6 @@ type Repo interface {
 
 	//tasks
 	GetTask(taskID int) (*models.Task, error)
+	AddStudentsTask(studentTask models.StudentTask) (models.StudentTask, error)
+	UpdateStudentTask(studentTask models.StudentTask) error
 }

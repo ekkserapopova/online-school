@@ -2,6 +2,7 @@ package handler
 
 import (
 	"onlineschool/internal/app"
+	"onlineschool/internal/llm/service"
 	"onlineschool/internal/redis"
 
 	"github.com/gin-contrib/cors"
@@ -9,12 +10,13 @@ import (
 )
 
 type Handler struct {
-	repo        app.Repo
-	redisClient redis.Client
+	repo          app.Repo
+	redisClient   redis.Client
+	codeEvaluator *service.CodeEvaluator
 }
 
-func NewHandler(repo app.Repo, redisClient redis.Client) *Handler {
-	return &Handler{repo: repo, redisClient: redisClient}
+func NewHandler(repo app.Repo, redisClient redis.Client, codeEvaluator service.CodeEvaluator) *Handler {
+	return &Handler{repo: repo, redisClient: redisClient, codeEvaluator: &codeEvaluator}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
@@ -74,6 +76,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 		//tasks
 		api.GET("/task/:taskID", TokenAuth(), h.GetTask)
+		api.POST("/task/:taskID/answer", TokenAuth(), h.AddStudentsTask)
 
 	}
 

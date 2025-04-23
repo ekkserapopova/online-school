@@ -66,7 +66,7 @@ func (r *Repo) GetLanguages(name string) ([]models.Language, error) {
 func (r *Repo) GetStudentsCourse(userID, courseID int) (models.Course, error) {
 	var course models.Course
 	err := r.db.Table("students_courses").
-		Select("courses.*").Preload("Modules.Lessons").Preload("Modules.Tests").
+		Select("courses.*").Preload("Modules.Lessons").Preload("Modules.Tests").Preload("Modules.Tasks").
 		Joins("join courses on students_courses.course_id = courses.id").
 		Where("students_courses.course_id = ? AND students_courses.user_id = ?", courseID, userID).
 		Take(&course).Error

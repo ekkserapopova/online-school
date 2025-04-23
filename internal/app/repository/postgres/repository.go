@@ -34,6 +34,7 @@ func NewRepo(connectionString string) (*Repo, error) {
 		&models.StudentAnswer{},
 		&models.CompletedTest{},
 		&models.Task{},
+		&models.StudentTask{},
 	)
 
 	if err != nil {
