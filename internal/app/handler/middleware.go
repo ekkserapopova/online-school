@@ -17,8 +17,6 @@ import (
 func (h *Handler) Register(c *gin.Context) {
 	var input models.User
 
-	input.IsAdmin = false
-
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -116,10 +114,11 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "клиент успешно авторизован",
-		"login":   user.Email,
-		"userId":  user.ID,
-		"token":   token, // Возвращаем токен в ответе
+		"message":    "клиент успешно авторизован",
+		"login":      user.Email,
+		"userId":     user.ID,
+		"token":      token,
+		"is_teacher": user.IsTeacher, // Возвращаем токен в ответе
 	})
 }
 

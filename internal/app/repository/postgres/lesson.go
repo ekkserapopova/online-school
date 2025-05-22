@@ -109,10 +109,39 @@ func (r *Repo) GetFutureLessons(moduleID int) ([]models.Lesson, error) {
 
 func (r *Repo) GetLesson(lessonId int) (models.Lesson, error) {
 	var lesson models.Lesson
-	err := r.db.Where("id = ?", lessonId).First(&lesson).Error
+	err := r.db.Preload("Materials").Where("id = ?", lessonId).First(&lesson).Error
 	if err != nil {
 		return lesson, err
 	}
 
 	return lesson, nil
+}
+
+func (r *Repo) GetLessonsWithoutCourses() ([]models.Lesson, error) {
+	var lessons []models.Lesson
+	err := r.db.Where("module_id = ?", nil).Find(&lessons).Error
+
+	return []models.Lesson{}, err
+}
+
+func (r *Repo) AddLesson(lesson models.Lesson) (models.Lesson, error) {
+	err := r.db.Create(&lesson).Error
+	return lesson, err
+}
+
+func (r *Repo) AddLessonToModule(lesson *models.Lesson, moduleID int) error {
+	lesson.ModuleID = moduleID
+	err := r.db.Updates(&lesson).Where("id = ?", lesson.ID).Error
+	return err
+}
+
+func (r *Repo) DeleteLesson(lessonId int) error {
+	err := r.db.Delete(&models.Lesson{}, "id = ?", lessonId).Error
+	return err
+}
+
+func (r *Repo) UpdateLesson(lesson models.Lesson) (models.Lesson, error) {
+	//var lesson models.Lesson
+	err := r.db.Save(&lesson).Error
+	return lesson, err
 }

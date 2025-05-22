@@ -5,8 +5,9 @@ import (
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 	"log"
+	"math"
+	"math/rand"
 	"onlineschool/internal/models"
-	"time"
 )
 
 func (r *Repo) GetTest(testID int) (models.Test, error) {
@@ -108,51 +109,16 @@ func (r *Repo) AddAnswerByStudent(studentAnswer models.StudentAnswer) (models.St
 		studentAnswer.PointsEarned = 0
 	}
 
+	err = r.db.Save(&studentAnswer).Error
 	// Используем транзакцию для гарантированного обновления
-	tx := r.db.Begin()
-
-	if existsStudentAnswer {
-		log.Printf("Updating student's answer")
-
-		// В случае обновления тоже используем транзакцию
-		err = tx.Model(&models.StudentAnswer{}).
-			Where("student_id = ? AND question_id = ?", studentAnswer.StudentID, questionID).
-			Updates(map[string]interface{}{
-				"selected_answer_ids": pq.Array(studentAnswer.SelectedAnswerIDs),
-				"result":              studentAnswer.Result,
-				"points_earned":       studentAnswer.PointsEarned,
-				"updated_at":          time.Now(),
-			}).Error
-
-		if err != nil {
-			tx.Rollback()
-			return studentAnswer, err
-		}
-	} else {
-		log.Printf("Creating new student answer")
-
-		err = tx.Exec(`
-            INSERT INTO student_answers
-            (student_id, question_id, test_id, selected_answer_ids, result, points_earned, created_at, updated_at)
-            VALUES (?, ?, ?, ?::integer[], ?, ?, ?, ?)
-        `,
-			studentAnswer.StudentID,
-			questionID,
-			studentAnswer.TestID,
-			pq.Array(studentAnswer.SelectedAnswerIDs),
-			studentAnswer.Result,
-			studentAnswer.PointsEarned,
-			time.Now(),
-			time.Now()).Error
-	}
-
+	//tx := r.db.Begin()
 	if err != nil {
-		tx.Rollback()
+		//tx.Rollback()
 		log.Printf("Error occurred: %v", err)
 		return studentAnswer, err
 	}
 
-	tx.Commit()
+	//tx.Commit()
 	log.Printf("Student answer was successfully created or updated")
 
 	var completedTest models.CompletedTest
@@ -165,6 +131,7 @@ func (r *Repo) AddAnswerByStudent(studentAnswer models.StudentAnswer) (models.St
 			completedTest.TestID = studentAnswer.TestID
 			completedTest.StudentID = studentAnswer.StudentID
 			completedTest.Status = "in progress"
+			completedTest.Points += studentAnswer.PointsEarned
 			err = r.db.Create(&completedTest).Error
 			if err != nil {
 				return studentAnswer, err
@@ -206,8 +173,7 @@ func (r *Repo) GetStudentAnswers(testID int, studentID int) ([]models.StudentAns
 	studentAnswers := []models.StudentAnswer{}
 
 	err := r.db.
-		Find(&studentAnswers).
-		Where("test_id = ? and student_id = ?", testID, studentID).Error
+		Where("test_id = ? and student_id = ?", testID, studentID).Find(&studentAnswers).Error
 
 	if err != nil {
 		return nil, err
@@ -220,7 +186,7 @@ func (r *Repo) GetRightAnswers(testID int) ([]models.AnswerResponse, error) {
 	//TODO: preload answer's info
 	var rightAnswers []models.AnswerResponse
 
-	err := r.db.Preload("Answer").
+	err := r.db.
 		Model(&models.AnswerVariant{}).
 		Where("test_id = ? AND is_right = ?", testID, true).
 		Find(&rightAnswers).Error
@@ -337,4 +303,139 @@ func (r *Repo) GetCompletedTest(testID int, studentID int) (models.CompletedTest
 	}
 
 	return completedTest, nil
+}
+
+func (r *Repo) RandomGenerateTest(testID int) (models.Test, error) {
+	questions := []models.Question{}
+	test, err := r.GetTest(testID)
+	if err != nil {
+		return test, err
+	}
+
+	// Получаем доступные вопросы без привязки к тесту
+	err = r.db.
+		Where("module_id = ? AND test_id IS NULL", test.ModuleID).
+		Find(&questions).Error
+	if err != nil {
+		return test, err
+	}
+
+	if len(questions) < int(math.Abs(float64(test.CountQuestions))) {
+		test.CountQuestions = len(questions)
+	}
+
+	// Перемешиваем вопросы
+	rand.Shuffle(len(questions), func(i, j int) {
+		questions[i], questions[j] = questions[j], questions[i]
+	})
+
+	questionsForNewTest := questions[:int(math.Abs(float64(test.CountQuestions)))]
+
+	// Обновляем каждый вопрос: test_id и module_id = NULL
+	for i := range questionsForNewTest {
+		questionsForNewTest[i].TestID = &test.ID
+
+		// Сохраняем test_id и сбрасываем module_id через прямой SQL
+		err := r.db.Model(&questionsForNewTest[i]).
+			Updates(map[string]interface{}{
+				"test_id":   test.ID,
+				"module_id": gorm.Expr("NULL"),
+			}).Error
+		if err != nil {
+			return test, err
+		}
+	}
+
+	return test, nil
+}
+
+func (r *Repo) CreateTest(test models.Test) (models.Test, error) {
+	err := r.db.Create(&test).Error
+	return test, err
+}
+
+func (r *Repo) DeleteTest(testID int) error {
+	err := r.db.Delete(&models.Test{}, "id = ?", testID).Error
+	return err
+}
+
+func (r *Repo) GetQuestionsForModule(moduleID int) ([]models.Question, error) {
+	var questions []models.Question
+	err := r.db.Preload("Answers").Where("module_id = ? and test_id is null", moduleID).Find(&questions).Error
+	return questions, err
+}
+
+func (r *Repo) AddQuestion(question models.Question) (models.Question, error) {
+	err := r.db.Create(&question).Error
+	return question, err
+}
+
+func (r *Repo) AddAnswer(answer models.AnswerVariant) (models.AnswerVariant, error) {
+	err := r.db.Create(&answer).Error
+	return answer, err
+}
+
+func (r *Repo) UpdateTest(test models.Test) error {
+	err := r.db.Save(&test).Error
+	return err
+}
+
+func (r *Repo) CreateStudentTest(testID, studentID int) (models.CompletedTest, error) {
+	var test models.CompletedTest
+	test.TestID = &testID
+	test.Status = "in progress"
+	test.StudentID = studentID
+	test.Points = 0
+	err := r.db.Save(&test).Error
+	return test, err
+}
+
+func (r *Repo) GetStudentsTests(testID int) ([]models.CompletedTestResponse, error) {
+	var tests []models.CompletedTest
+	err := r.db.Where("test_id = ?", testID).Find(&tests).Error
+	var testsResult []models.CompletedTestResponse
+	for _, test := range tests {
+		var student models.User
+		err = r.db.Where("id = ?", test.StudentID).First(&student).Error
+		student_name := student.Name
+		student_surname := student.Surname
+		testsResult = append(testsResult, models.CompletedTestResponse{
+			ID:             test.ID,
+			TestID:         &test.ID,
+			StudentID:      test.StudentID,
+			Status:         test.Status,
+			Points:         test.Points,
+			CreatedAt:      test.CreatedAt,
+			UpdatedAt:      test.UpdatedAt,
+			StudentName:    student_name,
+			StudentSurname: student_surname,
+		})
+	}
+	return testsResult, err
+}
+
+func (r *Repo) DeleteAnswer(answerID int) error {
+	err := r.db.Where("id = ?", answerID).Delete(&models.AnswerVariant{}).Error
+	return err
+}
+
+func (r *Repo) DeleteQuestion(questionID int) error {
+	err := r.db.Where("id = ?", questionID).Delete(&models.Question{}).Error
+	return err
+}
+
+func (r *Repo) UpdateQuestion(question models.Question) error {
+	err := r.db.Save(&question).Error
+	return err
+}
+
+func (r *Repo) GetAnswerVariant(answerID int) (models.AnswerVariant, error) {
+	var answer models.AnswerVariant
+	err := r.db.Where("id = ?", answerID).First(&answer).Error
+	return answer, err
+}
+
+func (r *Repo) UpdateAnswerVariant(answerVariant models.AnswerVariant) error {
+	err := r.db.Save(&answerVariant).Error
+	return err
 }

@@ -39,3 +39,10 @@ func (r *Repo) GetByID(id int) (*models.User, error) {
 	return &user, gorm.ErrRecordNotFound
 
 }
+
+func (r *Repo) AddPhoto(user *models.User, path string) error {
+	user.Photo = path
+	err := r.db.Where("id = ?", user.ID).Save(&user).Error
+
+	return err
+}

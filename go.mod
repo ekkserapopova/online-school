@@ -4,6 +4,7 @@ go 1.24.1
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/uuid v1.6.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/openai/openai-go v0.1.0-beta.10
 	gorm.io/driver/postgres v1.5.11
